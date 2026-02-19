@@ -174,6 +174,22 @@ class PostgresDatabase {
         )
       `)
 
+      await query(`
+        CREATE TABLE IF NOT EXISTS projects (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          description TEXT NOT NULL,
+          company TEXT,
+          date TEXT NOT NULL,
+          image TEXT,
+          technologies TEXT[] NOT NULL,
+          link TEXT,
+          views INTEGER DEFAULT 0,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `)
+
       console.log('✅ Database tables initialized')
     } catch (error) {
       console.error('❌ Error initializing database:', error)
