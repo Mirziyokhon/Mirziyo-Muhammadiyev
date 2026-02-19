@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
-  BarChart3, FileText, Briefcase, LogOut, Eye, Heart
+  BarChart3, FileText, Briefcase, FolderOpen, LogOut, Eye, Heart
 } from 'lucide-react'
 import { EssaysTab } from '@/components/admin/EssaysTab'
 import { WorksTab } from '@/components/admin/AdminTabs'
+import { ProjectsTab } from '@/components/admin/AdminTabs'
 
-type Tab = 'analytics' | 'essays' | 'works'
+type Tab = 'analytics' | 'essays' | 'works' | 'projects'
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('analytics')
@@ -73,6 +74,13 @@ export default function AdminDashboard() {
           >
             Works
           </TabButton>
+          <TabButton
+            active={activeTab === 'projects'}
+            onClick={() => setActiveTab('projects')}
+            icon={<FolderOpen className="w-4 h-4" />}
+          >
+            Projects
+          </TabButton>
         </div>
 
         {/* Content */}
@@ -80,6 +88,7 @@ export default function AdminDashboard() {
           {activeTab === 'analytics' && <AnalyticsTab token={token} />}
           {activeTab === 'essays' && <EssaysTab token={token} />}
           {activeTab === 'works' && <WorksTab token={token} />}
+          {activeTab === 'projects' && <ProjectsTab token={token} />}
         </div>
       </div>
     </div>

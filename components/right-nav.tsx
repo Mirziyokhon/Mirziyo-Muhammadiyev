@@ -8,6 +8,7 @@ const navItems = [
   { label: "Home", href: "/" },
   { label: "Essays", href: "/essays" },
   { label: "Works", href: "/works" },
+  { label: "Projects", href: "/projects" },
 ]
 
 export function LeftNav() {

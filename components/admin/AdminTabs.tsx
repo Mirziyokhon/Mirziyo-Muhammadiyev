@@ -640,6 +640,239 @@ export function QuotesTab({ token }: { token: string }) {
   )
 }
 
+// Projects Tab
+export function ProjectsTab({ token }: { token: string }) {
+  const [projects, setProjects] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    company: '',
+    date: '',
+    image: '',
+    technologies: [],
+    link: '',
+  })
+
+  useEffect(() => {
+    fetchProjects()
+  }, [])
+
+  const fetchProjects = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/admin/projects', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await response.json()
+      setProjects(data)
+    } catch (error) {
+      console.error('Failed to fetch projects:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    try {
+      if (editingId) {
+        await fetch('/api/admin/projects', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ id: editingId, ...formData }),
+        })
+      } else {
+        await fetch('/api/admin/projects', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formData),
+        })
+      }
+      
+      resetForm()
+      fetchProjects()
+    } catch (error) {
+      console.error('Failed to save project:', error)
+    }
+  }
+
+  const handleEdit = (project: any) => {
+    setEditingId(project.id)
+    setFormData({
+      title: project.title,
+      description: project.description,
+      company: project.company,
+      date: project.date,
+      image: project.image || '',
+      technologies: project.technologies || [],
+      link: project.link || '',
+    })
+    setShowForm(true)
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure?')) return
+
+    try {
+      await fetch('/api/admin/projects', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id }),
+      })
+      fetchProjects()
+    } catch (error) {
+      console.error('Failed to delete project:', error)
+    }
+  }
+
+  const resetForm = () => {
+    setFormData({ title: '', description: '', company: '', date: '', image: '', technologies: [], link: '' })
+    setEditingId(null)
+    setShowForm(false)
+  }
+
+  if (loading) return <div className="text-center py-12">Loading...</div>
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-semibold">Projects ({projects.length})</h2>
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-[#8B6F47] text-white rounded-lg hover:opacity-90"
+        >
+          <Plus className="w-4 h-4" />
+          Add Project
+        </button>
+      </div>
+
+      {showForm && (
+        <FormModal title={editingId ? 'Edit Project' : 'Add Project'} onClose={resetForm}>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Project Title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-3 py-2 bg-muted/30 border border-border rounded"
+              required
+            />
+            <textarea
+              placeholder="Project Description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 bg-muted/30 border border-border rounded h-32"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Company/Organization"
+              value={formData.company}
+              onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+              className="w-full px-3 py-2 bg-muted/30 border border-border rounded"
+            />
+            <input
+              type="text"
+              placeholder="Date (e.g., June 2024)"
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              className="w-full px-3 py-2 bg-muted/30 border border-border rounded"
+              required
+            />
+            <input
+              type="url"
+              placeholder="Project Link (optional)"
+              value={formData.link}
+              onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+              className="w-full px-3 py-2 bg-muted/30 border border-border rounded"
+            />
+            <div>
+              <label className="block text-sm font-medium mb-2">Technologies (comma-separated)</label>
+              <input
+                type="text"
+                placeholder="React, TypeScript, Node.js"
+                value={formData.technologies.join(', ')}
+                onChange={(e) => setFormData({ ...formData, technologies: e.target.value.split(',').map(t => t.trim()) })}
+                className="w-full px-3 py-2 bg-muted/30 border border-border rounded"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2">Project Images</label>
+              <MediaUpload
+                onUploadComplete={(url) => setFormData({ ...formData, image: url })}
+                currentMedia={formData.image}
+                acceptVideo={false}
+                section="projects"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button type="submit" className="flex-1 px-4 py-2 bg-[#8B6F47] text-white rounded hover:opacity-90">
+                {editingId ? 'Update' : 'Create'}
+              </button>
+              <button type="button" onClick={resetForm} className="px-4 py-2 border border-border rounded">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </FormModal>
+      )}
+
+      <div className="grid gap-4">
+        {projects.map((project) => (
+          <div key={project.id} className="border border-border rounded-lg p-4 flex justify-between items-start">
+            <div className="flex gap-4 flex-1">
+              {project.image && (
+                <div className="relative w-20 h-20 flex-shrink-0">
+                  <Image src={project.image} alt={project.title} fill className="object-cover rounded" />
+                </div>
+              )}
+              <div className="flex-1">
+                <h3 className="font-semibold">{project.title}</h3>
+                <p className="text-sm text-muted-foreground mb-2">{project.company}</p>
+                <p className="text-sm mb-2">{project.description}</p>
+                {project.technologies && project.technologies.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {project.technologies.map((tech, index) => (
+                      <span key={index} className="px-2 py-1 bg-[#8B6F47]/20 text-[#8B6F47] text-xs rounded">
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <p className="text-sm text-muted-foreground">{project.date}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => handleEdit(project)} className="p-2 hover:bg-muted/30 rounded">
+                <Edit className="w-4 h-4" />
+              </button>
+              <button onClick={() => handleDelete(project.id)} className="p-2 hover:bg-red-50 text-red-600 rounded">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // Helper component for modal
 function FormModal({ title, onClose, children }: any) {
   return (
