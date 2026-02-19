@@ -30,6 +30,34 @@ export default function AdminDashboard() {
     router.push('/admin')
   }
 
+  const handleMigrateData = async () => {
+    if (!confirm('This will migrate all essays and works from file database to PostgreSQL. Continue?')) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/admin/migrate-data', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      const result = await response.json()
+      
+      if (response.ok) {
+        alert(`✅ ${result.message}`)
+        // Refresh the current tab to show migrated data
+        window.location.reload()
+      } else {
+        alert(`❌ Error: ${result.error}`)
+      }
+    } catch (error) {
+      alert(`❌ Migration failed: ${error}`)
+    }
+  }
+
   if (!token) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>
   }
@@ -81,6 +109,12 @@ export default function AdminDashboard() {
           >
             Projects
           </TabButton>
+          <button
+            onClick={handleMigrateData}
+            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm whitespace-nowrap"
+          >
+            Migrate Data
+          </button>
         </div>
 
         {/* Content */}
