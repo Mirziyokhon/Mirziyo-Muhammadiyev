@@ -3,13 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
-  BarChart3, FileText, Briefcase, MessageSquare, Quote, 
-  LogOut, Eye, Heart
+  BarChart3, FileText, Briefcase, LogOut, Eye, Heart
 } from 'lucide-react'
 import { EssaysTab } from '@/components/admin/EssaysTab'
-import { WorksTab, BlogTab, QuotesTab } from '@/components/admin/AdminTabs'
+import { WorksTab } from '@/components/admin/AdminTabs'
 
-type Tab = 'analytics' | 'essays' | 'works' | 'blog' | 'quotes'
+type Tab = 'analytics' | 'essays' | 'works'
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('analytics')
@@ -74,20 +73,6 @@ export default function AdminDashboard() {
           >
             Works
           </TabButton>
-          <TabButton
-            active={activeTab === 'blog'}
-            onClick={() => setActiveTab('blog')}
-            icon={<MessageSquare className="w-4 h-4" />}
-          >
-            Blog
-          </TabButton>
-          <TabButton
-            active={activeTab === 'quotes'}
-            onClick={() => setActiveTab('quotes')}
-            icon={<Quote className="w-4 h-4" />}
-          >
-            Quotes
-          </TabButton>
         </div>
 
         {/* Content */}
@@ -95,8 +80,6 @@ export default function AdminDashboard() {
           {activeTab === 'analytics' && <AnalyticsTab token={token} />}
           {activeTab === 'essays' && <EssaysTab token={token} />}
           {activeTab === 'works' && <WorksTab token={token} />}
-          {activeTab === 'blog' && <BlogTab token={token} />}
-          {activeTab === 'quotes' && <QuotesTab token={token} />}
         </div>
       </div>
     </div>

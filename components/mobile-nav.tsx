@@ -11,8 +11,6 @@ const navItems = [
   { label: "Home", href: "/" },
   { label: "Essays", href: "/essays" },
   { label: "Works", href: "/works" },
-  { label: "Blog", href: "/blog" },
-  { label: "Quotes", href: "/quotes" },
 ]
 
 export function MobileNav() {

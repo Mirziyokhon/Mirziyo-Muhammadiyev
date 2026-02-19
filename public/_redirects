@@ -3,3 +3,9 @@
 
 # Handle client-side routing
 /*    /index.html   200
+
+# Redirect deleted sections
+/blog    /    301
+/quotes    /    301
+/api/admin/blog    /admin    301
+/api/admin/quotes    /admin    301
