@@ -27,7 +27,7 @@ export default function MigratePage() {
         return
       }
 
-      const response = await fetch('/api/admin/migrate', {
+      const response = await fetch('/api/admin/migrate-data', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
