@@ -11,6 +11,8 @@ const nextConfig = {
       bodySizeLimit: '50mb',
     },
   },
+  // Disable Vercel Analytics since we're on Netlify
+  analytics: false,
 }
 
 export default nextConfig
