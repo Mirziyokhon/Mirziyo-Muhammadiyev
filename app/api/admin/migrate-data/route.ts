@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
     // Get data from file-based database
     const essays = await fileDb.getEssays()
     const works = await fileDb.getWorks()
+    const projects = await fileDb.getProjects()
     
     // Migrate essays
     for (const essay of essays) {
@@ -38,9 +39,22 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    // Migrate projects
+    for (const project of projects) {
+      await dbPostgres.createProject({
+        title: project.title,
+        description: project.description,
+        company: project.company || undefined,
+        date: project.date,
+        image: project.image || undefined,
+        technologies: project.technologies,
+        link: project.link || undefined
+      } as any)
+    }
+
     return NextResponse.json({ 
       success: true, 
-      message: `Migrated ${essays.length} essays and ${works.length} works` 
+      message: `Migrated ${essays.length} essays, ${works.length} works, and ${projects.length} projects` 
     })
   } catch (error) {
     console.error('Migration error:', error)

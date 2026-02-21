@@ -32,6 +32,20 @@ export interface Work {
   updatedAt: string
 }
 
+export interface Project {
+  id: string
+  title: string
+  description: string
+  company?: string
+  date: string
+  image?: string
+  technologies: string[]
+  link?: string
+  views: number
+  createdAt: string
+  updatedAt: string
+}
+
 export interface BlogPost {
   id: string
   title: string
@@ -79,6 +93,7 @@ export interface Analytics {
 class Database {
   private essays: Map<string, Essay> = new Map()
   private works: Map<string, Work> = new Map()
+  private projects: Map<string, Project> = new Map()
   private blogPosts: Map<string, BlogPost> = new Map()
   private quotes: Map<string, Quote> = new Map()
   private reactions: Reaction[] = []
@@ -359,6 +374,13 @@ class Database {
 
   getWork(id: string): Work | undefined {
     return this.works.get(id)
+  }
+
+  // Projects
+  getProjects(): Project[] {
+    return Array.from(this.projects.values()).sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
   }
 
   createWork(work: Omit<Work, 'id' | 'createdAt' | 'updatedAt' | 'views'>): Work {
