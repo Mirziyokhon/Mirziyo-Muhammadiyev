@@ -2,12 +2,32 @@
 
 import Image from "next/image"
 import { Mail, Linkedin, Send, Instagram, Copy, Check } from "lucide-react"
-import { useState } from "react"
+import { XLogo } from "@/components/XLogo"
+import { useState, useEffect } from "react"
 
 export default function HomePage() {
   const [showEmailPopup, setShowEmailPopup] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [homepage, setHomepage] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
   const email = "mirziyoqwerty@gmail.com"
+
+  useEffect(() => {
+    fetchHomepage()
+  }, [])
+
+  const fetchHomepage = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/public/homepage')
+      const data = await response.json()
+      setHomepage(data)
+    } catch (error) {
+      console.error('Failed to fetch homepage:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(email)
@@ -31,36 +51,36 @@ export default function HomePage() {
           </div>
           <div>
             <h1 className="font-heading text-4xl md:text-5xl font-semibold mb-2 leading-tight">
-              Mirziyo Muhammadiyev
+              {homepage?.title || "Mirziyo Muhammadiyev"}
             </h1>
-            <p className="text-xl text-[#8B6F47]">What&apos;s up?</p>
+            <p className="text-xl text-[#8B6F47]">{homepage?.subtitle || "What's up?"}</p>
           </div>
         </div>
       </header>
 
       {/* About section */}
       <section className="prose prose-lg max-w-none mb-20">
-        <p className="text-lg leading-relaxed mb-6">
-          I&apos;m Mirziyo. I build things that matter, ask uncomfortable questions, and refuse to stay in one box.
-        </p>
-        <p className="text-lg leading-relaxed mb-6">
-          <strong>What I do:</strong> Research at the intersection of code and cognition. Build EdTech products that shape education. Investigate how computational tools expose patterns human perception misses—emotion recognition in classrooms, algorithmic bias in learning systems, whether technology augments or replaces human judgment.
-        </p>
-        <p className="text-lg leading-relaxed mb-6">
-          <strong>Fields of interest:</strong> CS. Psychology. Cognitive Science. Ethics, Politics, Economics.
-        </p>
-        <p className="text-lg leading-relaxed mb-6">
-          <strong>Who I am offline:</strong> Teacher and a student. Full-time overthinker. A supportive friend or a colleague. That one delusional guy. And a person that questions everything, including why I question everything.
-        </p>
-        <p className="text-lg leading-relaxed mb-6">
-          <strong>Hobbies:</strong> Music. Basketball. Creative Writing. Debate. Videography and Films. Philosophy. Fashion.
-        </p>
-        <p className="text-lg leading-relaxed mb-6">
-          <strong>What this site is:</strong> Not a portfolio. Not a personal brand. Repository for ideas that don&apos;t fit elsewhere. Writing that&apos;s too raw for papers, too long for posts, too honest for performative platforms. If you&apos;re reading this, you either know me or you&apos;re procrastinating. Either way—welcome.
-        </p>
-        <p className="text-lg leading-relaxed">
-          <strong>Contact:</strong> If you want to debate ideas, collaborate on projects, or tell me I&apos;m wrong about something. Feel free to reach out.
-        </p>
+        {loading ? (
+          <div className="text-lg leading-relaxed whitespace-pre-wrap">
+            Loading...
+          </div>
+        ) : (
+          <div className="text-lg leading-relaxed whitespace-pre-wrap">
+            {homepage?.description || `I'm Mirziyo. I build things that matter, ask uncomfortable questions, and refuse to stay in one box.
+
+What I do: Research at the intersection of code and cognition. Build EdTech products that shape education. Investigate how computational tools expose patterns human perception misses—emotion recognition in classrooms, algorithmic bias in learning systems, whether technology augments or replaces human judgment.
+
+Fields of interest: CS. Psychology. Cognitive Science. Ethics, Politics, Economics.
+
+Who I am offline: Teacher and a student. Full-time overthinker. A supportive friend or a colleague. That one delusional guy. And a person that questions everything, including why I question everything.
+
+Hobbies: Music. Basketball. Creative Writing. Debate. Videography and Films. Philosophy. Fashion.
+
+What this site is: Not a portfolio. Not a personal brand. Repository for ideas that don't fit elsewhere. Writing that's too raw for papers, too long for posts, too honest for performative platforms. If you're reading this, you either know me or you're procrastinating. Either way—welcome.
+
+Contact: If you want to debate ideas, collaborate on projects, or tell me I'm wrong about something. Feel free to reach out.`}
+          </div>
+        )}
       </section>
 
       {/* Contact section */}
@@ -100,6 +120,15 @@ export default function HomePage() {
             aria-label="Instagram"
           >
             <Instagram className="w-6 h-6" />
+          </a>
+          <a
+            href="https://x.com/Mirziyokhon"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#8B6F47] hover:opacity-70 transition-opacity"
+            aria-label="X (Twitter)"
+          >
+            <XLogo className="w-6 h-6" />
           </a>
         </div>
       </section>

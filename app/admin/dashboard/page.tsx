@@ -3,13 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
-  BarChart3, FileText, Briefcase, FolderOpen, LogOut, Eye, Heart
+  BarChart3, FileText, Briefcase, FolderOpen, Home, LogOut, Eye, Heart
 } from 'lucide-react'
 import { EssaysTab } from '@/components/admin/EssaysTab'
-import { WorksTab } from '@/components/admin/AdminTabs'
-import { ProjectsTab } from '@/components/admin/AdminTabs'
+import { WorksTab, ProjectsTab, HomepageTab } from '@/components/admin/AdminTabs'
 
-type Tab = 'analytics' | 'essays' | 'works' | 'projects'
+type Tab = 'analytics' | 'homepage' | 'essays' | 'works' | 'projects'
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('analytics')
@@ -61,6 +60,13 @@ export default function AdminDashboard() {
             Analytics
           </TabButton>
           <TabButton
+            active={activeTab === 'homepage'}
+            onClick={() => setActiveTab('homepage')}
+            icon={<Home className="w-4 h-4" />}
+          >
+            Homepage
+          </TabButton>
+          <TabButton
             active={activeTab === 'essays'}
             onClick={() => setActiveTab('essays')}
             icon={<FileText className="w-4 h-4" />}
@@ -92,6 +98,7 @@ export default function AdminDashboard() {
         {/* Content */}
         <div className="bg-background">
           {activeTab === 'analytics' && <AnalyticsTab token={token} />}
+          {activeTab === 'homepage' && <HomepageTab token={token} />}
           {activeTab === 'essays' && <EssaysTab token={token} />}
           {activeTab === 'works' && <WorksTab token={token} />}
           {activeTab === 'projects' && <ProjectsTab token={token} />}

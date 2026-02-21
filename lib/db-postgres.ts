@@ -91,6 +91,12 @@ export interface Project {
   updatedAt: string
 }
 
+export interface HomepageContent {
+  title: string
+  subtitle: string
+  description: string
+}
+
 export interface Analytics {
   date: string
   pageViews: number
@@ -186,6 +192,16 @@ class PostgresDatabase {
           link TEXT,
           views INTEGER DEFAULT 0,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `)
+
+      await query(`
+        CREATE TABLE IF NOT EXISTS homepage (
+          id TEXT PRIMARY KEY DEFAULT 'main',
+          title TEXT NOT NULL,
+          subtitle TEXT NOT NULL,
+          description TEXT NOT NULL,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `)
@@ -688,6 +704,30 @@ class PostgresDatabase {
   async deleteProject(id: string): Promise<boolean> {
     const result = await query(`DELETE FROM projects WHERE id = $1`, [id])
     return (result.rowCount ?? 0) > 0
+  }
+
+  // Homepage
+  async getHomepage(): Promise<HomepageContent | undefined> {
+    const result = await query(`
+      SELECT title, subtitle, description
+      FROM homepage 
+      WHERE id = 'main'
+    `)
+    return result.rows[0] as HomepageContent | undefined
+  }
+
+  async updateHomepage(content: HomepageContent): Promise<HomepageContent> {
+    await query(`
+      INSERT INTO homepage (id, title, subtitle, description)
+      VALUES ('main', $1, $2, $3)
+      ON CONFLICT (id) DO UPDATE SET
+        title = EXCLUDED.title,
+        subtitle = EXCLUDED.subtitle,
+        description = EXCLUDED.description,
+        updated_at = CURRENT_TIMESTAMP
+    `, [content.title, content.subtitle, content.description])
+
+    return content
   }
 
   // Analytics (simplified - you can expand this)

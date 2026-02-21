@@ -640,6 +640,137 @@ export function QuotesTab({ token }: { token: string }) {
   )
 }
 
+// Homepage Tab
+export function HomepageTab({ token }: { token: string }) {
+  const [homepage, setHomepage] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [formData, setFormData] = useState({
+    title: '',
+    subtitle: '',
+    description: ''
+  })
+
+  useEffect(() => {
+    fetchHomepage()
+  }, [])
+
+  const fetchHomepage = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/admin/homepage', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await response.json()
+      setHomepage(data)
+      setFormData({
+        title: data.title || '',
+        subtitle: data.subtitle || '',
+        description: data.description || ''
+      })
+    } catch (error) {
+      console.error('Failed to fetch homepage:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    try {
+      await fetch('/api/admin/homepage', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      })
+      
+      setShowForm(false)
+      fetchHomepage()
+    } catch (error) {
+      console.error('Failed to save homepage:', error)
+    }
+  }
+
+  if (loading) return <div className="text-center py-12">Loading...</div>
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-semibold">Homepage Content</h2>
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-[#8B6F47] text-white rounded-lg hover:opacity-90"
+        >
+          <Edit className="w-4 h-4" />
+          Edit Homepage
+        </button>
+      </div>
+
+      {showForm && (
+        <FormModal title="Edit Homepage Content" onClose={() => setShowForm(false)}>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Your Name"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-3 py-2 bg-muted/30 border border-border rounded"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Subtitle/Slogan (e.g., What's up?)"
+              value={formData.subtitle}
+              onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+              className="w-full px-3 py-2 bg-muted/30 border border-border rounded"
+              required
+            />
+            <textarea
+              placeholder="Homepage Description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 bg-muted/30 border border-border rounded h-32"
+              required
+            />
+
+            <div className="flex gap-2">
+              <button type="submit" className="flex-1 px-4 py-2 bg-[#8B6F47] text-white rounded hover:opacity-90">
+                Save Changes
+              </button>
+              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 border border-border rounded">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </FormModal>
+      )}
+
+      {/* Current Content Preview */}
+      <div className="border border-border rounded-lg p-6">
+        <h3 className="font-semibold mb-4">Current Homepage Content</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Title:</label>
+            <p className="text-lg font-semibold">{homepage?.title || 'Not set'}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Subtitle:</label>
+            <p className="text-muted-foreground">{homepage?.subtitle || 'Not set'}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Description:</label>
+            <p className="text-muted-foreground">{homepage?.description || 'Not set'}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Projects Tab
 export function ProjectsTab({ token }: { token: string }) {
   const [projects, setProjects] = useState<any[]>([])
