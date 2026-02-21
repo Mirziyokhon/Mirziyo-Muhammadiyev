@@ -12,7 +12,8 @@ export default function AdminLoginPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Check if already logged in
+    // Clear any corrupted tokens and check if already logged in
+    localStorage.clear()
     const token = localStorage.getItem('adminToken')
     if (token) {
       router.push('/admin/dashboard')
@@ -34,6 +35,15 @@ export default function AdminLoginPage() {
       })
 
       console.log('Login response status:', response.status)
+      console.log('Login response headers:', response.headers)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Error response text:', errorText)
+        setError(`Server error: ${response.status}`)
+        return
+      }
+
       const data = await response.json()
       console.log('Login response data:', data)
 
@@ -41,7 +51,7 @@ export default function AdminLoginPage() {
         localStorage.setItem('adminToken', data.token)
         router.push('/admin/dashboard')
       } else {
-        setError('Invalid password')
+        setError(data.message || 'Invalid password')
       }
     } catch (err) {
       console.error('Login error:', err)
