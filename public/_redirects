@@ -1,5 +1,5 @@
-# Next.js routes
-/api/*    /.netlify/functions/:splat    200
+# Next.js API routes should be handled by Next.js, not Netlify functions
+# Only redirect actual pages and handle special cases
 
 # Handle client-side routing
 /*    /index.html   200
@@ -7,5 +7,7 @@
 # Redirect deleted sections
 /blog    /    301
 /quotes    /    301
+
+# Admin redirects for old routes (keep for compatibility)
 /api/admin/blog    /admin    301
 /api/admin/quotes    /admin    301
