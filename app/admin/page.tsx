@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Lock } from 'lucide-react'
+import { Lock, Eye, EyeOff } from 'lucide-react'
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -23,6 +24,8 @@ export default function AdminLoginPage() {
     setError('')
     setLoading(true)
 
+    console.log('Attempting login with password:', password)
+
     try {
       const response = await fetch('/api/admin/login', {
         method: 'POST',
@@ -30,7 +33,9 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ password }),
       })
 
+      console.log('Login response status:', response.status)
       const data = await response.json()
+      console.log('Login response data:', data)
 
       if (data.success) {
         localStorage.setItem('adminToken', data.token)
@@ -39,6 +44,7 @@ export default function AdminLoginPage() {
         setError('Invalid password')
       }
     } catch (err) {
+      console.error('Login error:', err)
       setError('Login failed. Please try again.')
     } finally {
       setLoading(false)
@@ -58,14 +64,23 @@ export default function AdminLoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              className="w-full px-4 py-3 bg-muted/30 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                className="w-full px-4 py-3 pr-12 bg-muted/30 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8B6F47] focus:border-transparent"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
 
           {error && (
