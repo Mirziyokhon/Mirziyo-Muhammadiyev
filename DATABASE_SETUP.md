@@ -85,6 +85,20 @@ If you have existing data in `data/database.json`, you'll need to manually migra
 2. Use the admin panel to recreate your content
 3. Or write a migration script (contact developer if needed)
 
+## 📷 Image Upload Setup (Cloudinary – Recommended)
+
+For reliable photo uploads on Netlify, add **Cloudinary** (free tier):
+
+1. Create a free account at [cloudinary.com](https://cloudinary.com)
+2. Go to **Dashboard** → **API Keys**
+3. In Netlify: **Site configuration** → **Environment variables**, add:
+   - `CLOUDINARY_CLOUD_NAME` – your cloud name
+   - `CLOUDINARY_API_KEY` – your API key
+   - `CLOUDINARY_API_SECRET` – your API secret
+4. Redeploy the site
+
+Without Cloudinary, uploads fall back to Netlify Blobs (which may have limitations).
+
 ## 📚 Additional Resources
 
 - [Vercel Postgres Docs](https://vercel.com/docs/storage/vercel-postgres)

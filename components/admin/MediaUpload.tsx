@@ -69,39 +69,41 @@ export default function MediaUpload({
   const uploadFile = async (fileToUpload: Blob | File) => {
     setUploading(true)
     try {
+      const token = localStorage.getItem('adminToken')
+      if (!token) {
+        alert('Upload failed: Please log in again.')
+        return
+      }
+
       const formData = new FormData()
-      
-      // Convert blob to file with proper name
       if (fileToUpload instanceof Blob && !(fileToUpload instanceof File)) {
         const fileName = selectedFile?.name || 'cropped-image.jpg'
         fileToUpload = new File([fileToUpload], fileName, { type: 'image/jpeg' })
       }
-      
       formData.append('file', fileToUpload)
 
-      const token = localStorage.getItem('adminToken')
-      
       const res = await fetch('/api/upload', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       })
 
-      const data = await res.json()
+      const data = await res.json().catch(() => ({ error: 'Invalid server response' }))
 
+      if (!res.ok) {
+        throw new Error(data.error || `Server error (${res.status})`)
+      }
       if (data.url) {
         onUploadComplete(data.url)
         setPreview(data.url)
         setSelectedFile(null)
       } else {
-        console.error('Upload failed:', data.error)
-        alert('Upload failed: ' + (data.error || 'Unknown error'))
+        throw new Error(data.error || 'No URL returned')
       }
     } catch (error) {
-      console.error('Upload failed:', error)
-      alert('Upload failed: ' + error)
+      const msg = error instanceof Error ? error.message : String(error)
+      console.error('Upload failed:', msg)
+      alert('Upload failed: ' + msg)
     } finally {
       setUploading(false)
     }
