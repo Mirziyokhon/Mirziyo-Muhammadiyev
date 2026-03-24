@@ -3,15 +3,7 @@ import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
 import { verifySession } from '@/lib/auth'
-
-// Increase body size limit for video uploads
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '50mb',
-    },
-  },
-}
+import { getStore } from '@netlify/blobs'
 
 export async function POST(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '') || null
@@ -38,24 +30,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File too large. Maximum size is 50MB.' }, { status: 400 })
     }
     
+    const timestamp = Date.now()
+    const filename = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
+    
+    // Use Netlify Blobs on Netlify (ephemeral filesystem doesn't persist writes)
+    if (process.env.NETLIFY || process.env.NETLIFY_DEV) {
+      const store = getStore({ name: 'uploads', consistency: 'strong' })
+      const bytes = await file.arrayBuffer()
+      const buffer = Buffer.from(bytes)
+      await store.set(filename, buffer, { metadata: { type: file.type } })
+      console.log(`✅ File uploaded to Blobs: ${filename} (${(file.size / 1024 / 1024).toFixed(2)}MB)`)
+      return NextResponse.json({ 
+        success: true, 
+        url: `/api/uploads/${filename}` 
+      })
+    }
+    
+    // Local development: use filesystem
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    
-    // Ensure uploads directory exists
     const uploadsDir = join(process.cwd(), 'public', 'uploads')
     if (!existsSync(uploadsDir)) {
       await mkdir(uploadsDir, { recursive: true })
     }
-    
-    // Generate unique filename
-    const timestamp = Date.now()
-    const filename = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
     const path = join(uploadsDir, filename)
-    
     await writeFile(path, buffer)
-    
     console.log(`✅ File uploaded: ${filename} (${(file.size / 1024 / 1024).toFixed(2)}MB)`)
-    
     return NextResponse.json({ 
       success: true, 
       url: `/uploads/${filename}` 

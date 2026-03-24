@@ -2,5 +2,9 @@
   command = "npm run build"
   publish = ".next"
 
+[functions]
+  # Allow up to 50MB for image/video uploads
+  request_body_size_limit = "50mb"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"

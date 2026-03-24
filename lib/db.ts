@@ -5,6 +5,7 @@ import { loadData, saveData, StorageData } from './storage'
 import { unlink } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
+import { getStore } from '@netlify/blobs'
 
 export interface Essay {
   id: string
@@ -610,51 +611,50 @@ class Database {
 
   // Helper method to delete media files
   private async deleteMediaFiles(imageUrl?: string, content?: string): Promise<void> {
-    const filesToDelete: string[] = []
+    const filesToDelete: { key: string; isBlob: boolean }[] = []
     
-    // Extract file path from image URL
-    if (imageUrl && imageUrl.startsWith('/uploads/')) {
-      filesToDelete.push(imageUrl.replace('/uploads/', ''))
+    const add = (url: string) => {
+      if (url.startsWith('/api/uploads/')) {
+        filesToDelete.push({ key: url.replace('/api/uploads/', ''), isBlob: true })
+      } else if (url.startsWith('/uploads/')) {
+        filesToDelete.push({ key: url.replace('/uploads/', ''), isBlob: false })
+      }
     }
     
-    // Extract file paths from content (markdown images and videos)
+    if (imageUrl) add(imageUrl)
+    
     if (content) {
-      // Match markdown images: ![alt](/uploads/filename)
-      const markdownImageRegex = /!\[.*?\]\(\/uploads\/([^)]+)\)/g
-      let match
-      while ((match = markdownImageRegex.exec(content)) !== null) {
-        filesToDelete.push(match[1])
-      }
-      
-      // Match HTML img tags: <img src="/uploads/filename">
-      const htmlImageRegex = /<img[^>]+src="\/uploads\/([^"]+)"/g
-      while ((match = htmlImageRegex.exec(content)) !== null) {
-        filesToDelete.push(match[1])
-      }
-      
-      // Match HTML video tags: <video src="/uploads/filename">
-      const htmlVideoRegex = /<video[^>]+src="\/uploads\/([^"]+)"/g
-      while ((match = htmlVideoRegex.exec(content)) !== null) {
-        filesToDelete.push(match[1])
-      }
-      
-      // Match video source tags: <source src="/uploads/filename">
-      const sourceRegex = /<source[^>]+src="\/uploads\/([^"]+)"/g
-      while ((match = sourceRegex.exec(content)) !== null) {
-        filesToDelete.push(match[1])
+      const patterns = [
+        /!\[.*?\]\(\/(?:api\/)?uploads\/([^)]+)\)/g,  // markdown
+        /<img[^>]+src="\/(?:api\/)?uploads\/([^"]+)"/g,
+        /<video[^>]+src="\/(?:api\/)?uploads\/([^"]+)"/g,
+        /<source[^>]+src="\/(?:api\/)?uploads\/([^"]+)"/g,
+      ]
+      for (const regex of patterns) {
+        let match
+        while ((match = regex.exec(content)) !== null) {
+          const key = match[1]
+          add(match[0].includes('/api/') ? `/api/uploads/${key}` : `/uploads/${key}`)
+        }
       }
     }
     
-    // Delete each file
-    for (const filename of filesToDelete) {
+    const onNetlify = process.env.NETLIFY || process.env.NETLIFY_DEV
+    for (const { key, isBlob } of filesToDelete) {
       try {
-        const filePath = join(process.cwd(), 'public', 'uploads', filename)
-        if (existsSync(filePath)) {
-          await unlink(filePath)
-          console.log(`🗑️  Deleted media file: ${filename}`)
+        if (isBlob && onNetlify) {
+          const store = getStore({ name: 'uploads', consistency: 'strong' })
+          await store.delete(key)
+          console.log(`🗑️  Deleted blob: ${key}`)
+        } else if (!isBlob) {
+          const filePath = join(process.cwd(), 'public', 'uploads', key)
+          if (existsSync(filePath)) {
+            await unlink(filePath)
+            console.log(`🗑️  Deleted media file: ${key}`)
+          }
         }
       } catch (error) {
-        console.error(`❌ Error deleting file ${filename}:`, error)
+        console.error(`❌ Error deleting file ${key}:`, error)
       }
     }
   }
