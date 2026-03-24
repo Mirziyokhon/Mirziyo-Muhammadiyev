@@ -65,8 +65,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 2. Netlify Blobs (on Netlify only)
-    if (process.env.NETLIFY || process.env.NETLIFY_DEV) {
+    // 2. Netlify Blobs (when on Netlify / serverless – filesystem is read-only)
+    const isServerless = process.cwd().includes('/var/task') || process.env.NETLIFY || process.env.NETLIFY_DEV
+    if (isServerless) {
       try {
         const store = getStore({ name: 'uploads', consistency: 'strong' })
         await store.set(filename, buffer)
@@ -75,12 +76,12 @@ export async function POST(request: NextRequest) {
       } catch (blobErr) {
         console.error('Netlify Blobs upload error:', blobErr)
         return NextResponse.json({
-          error: `Storage error: ${getErrorMessage(blobErr)}. Add Cloudinary env vars for reliable uploads.`,
+          error: `Upload failed. Add Cloudinary env vars (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET) in Netlify for reliable uploads.`,
         }, { status: 500 })
       }
     }
 
-    // 3. Local filesystem
+    // 3. Local filesystem (dev only)
     const uploadsDir = join(process.cwd(), 'public', 'uploads')
     if (!existsSync(uploadsDir)) {
       await mkdir(uploadsDir, { recursive: true })
